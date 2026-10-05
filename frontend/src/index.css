@@ -1,0 +1,247 @@
+/* Global styles. Mobile-first: phones get a bottom tab bar, tablets/desktops get it under the header. */
+
+:root {
+  --color-primary: #6f4e37;
+  --color-primary-dark: #563c2a;
+  --color-bg: #faf7f2;
+  --color-surface: #ffffff;
+  --color-text: #2b2118;
+  --color-muted: #7a6a5c;
+  --color-border: #e4dbd0;
+  --color-error: #b3261e;
+  --radius: 10px;
+  --nav-height: 60px;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 16px;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* ---------- Forms ---------- */
+
+.auth-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.field input {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.field input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.field-error {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.alert {
+  background: #fdecea;
+  color: var(--color-error);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-link {
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+/* ---------- App shell ---------- */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.shop-name {
+  font-weight: 700;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-offline {
+  background: #f9a825;
+  color: #2b2118;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.app-main {
+  padding: 16px;
+  /* Leave room for the bottom tab bar on phones. */
+  padding-bottom: calc(var(--nav-height) + 16px + env(safe-area-inset-bottom));
+}
+
+.app-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.app-nav a {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.app-nav a.active {
+  color: var(--color-primary);
+  box-shadow: inset 0 3px 0 var(--color-primary);
+}
+
+@media (min-width: 768px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Move the tab bar from the bottom to just under the header. */
+  .app-main {
+    order: 1;
+  }
+
+  .app-nav {
+    position: static;
+    height: 48px;
+    padding: 0 8px;
+    border-top: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .app-nav a {
+    flex: none;
+    padding: 0 20px;
+  }
+
+  .app-nav a.active {
+    box-shadow: inset 0 -3px 0 var(--color-primary);
+  }
+
+  .app-main {
+    padding-bottom: 16px;
+  }
+}

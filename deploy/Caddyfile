@@ -1,0 +1,28 @@
+# Caddy gets and renews the HTTPS certificate for $DOMAIN automatically (Let's Encrypt).
+# With DOMAIN=localhost it uses a local self-signed certificate instead (for testing).
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# API → Spring Boot
+	handle /api/* {
+		reverse_proxy app:8080
+	}
+
+	# Everything else → the built frontend (SPA)
+	handle {
+		root * /srv
+
+		# Files whose name never changes must not be cached, so app updates reach users.
+		@nocache path / /index.html /sw.js /registerSW.js /manifest.webmanifest
+		header @nocache Cache-Control "no-cache"
+
+		# Hashed build output can be cached forever.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+
+		# Unknown paths (e.g. /orders) are client-side routes: serve index.html.
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -1,0 +1,26 @@
+# Secrets
+.env
+!.env.example
+
+# Backend (Maven)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend (Node/Vite)
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+*.tsbuildinfo
+npm-debug.log*
+*.local
+
+# Backups
+deploy/backups/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db

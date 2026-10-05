@@ -1,0 +1,10 @@
+# Production. Every value must come from environment variables (see .env.example); no defaults.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  # Running behind Caddy: trust X-Forwarded-* headers.
+  forward-headers-strategy: framework

@@ -1,0 +1,11 @@
+# Integration tests run against a real PostgreSQL database "cms_test"
+# (created by docker-compose.dev.yml locally, by the postgres service in CI).
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/cms_test}
+    username: ${DB_USERNAME:cms}
+    password: ${DB_PASSWORD:cms}
+
+app:
+  jwt:
+    secret: test-only-secret-0123456789abcdef0123456789

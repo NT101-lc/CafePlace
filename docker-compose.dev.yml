@@ -1,0 +1,33 @@
+# Development only: PostgreSQL for the backend (database "cms") and its tests (database "cms_test").
+# Start:  docker compose -f docker-compose.dev.yml up -d
+# Stop:   docker compose -f docker-compose.dev.yml down        (add -v to also delete the data)
+name: cms-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cms
+      POSTGRES_USER: cms
+      POSTGRES_PASSWORD: cms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    configs:
+      # Runs only on the very first start (empty volume).
+      - source: create-test-db
+        target: /docker-entrypoint-initdb.d/create-test-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cms -d cms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+configs:
+  create-test-db:
+    content: |
+      CREATE DATABASE cms_test OWNER cms;
+
+volumes:
+  pgdata:

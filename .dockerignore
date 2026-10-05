@@ -1,0 +1,7 @@
+# Build context for deploy/web.Dockerfile is the repo root: only frontend/ and deploy/ are needed.
+**/node_modules
+**/dist
+backend/
+.git/
+.github/
+**/.env

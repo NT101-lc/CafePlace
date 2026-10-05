@@ -1,0 +1,16 @@
+# Local development. Defaults match docker-compose.dev.yml so no env vars are needed.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cms}
+    username: ${DB_USERNAME:cms}
+    password: ${DB_PASSWORD:cms}
+
+app:
+  jwt:
+    # Dev-only secret. Never reuse it in production.
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+
+logging:
+  level:
+    # Print SQL so you can see the automatic "shop_id = ?" filter.
+    org.hibernate.SQL: debug

@@ -1,0 +1,22 @@
+# Settings shared by all profiles. Environment-specific values live in application-{profile}.yml.
+spring:
+  application:
+    name: cms-backend
+  profiles:
+    # Running without SPRING_PROFILES_ACTIVE (e.g. ./mvnw spring-boot:run) uses the dev profile.
+    default: dev
+  jpa:
+    # Keep the DB session short: open per transaction, not per HTTP request.
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Flyway; Hibernate only checks that entities match it.
+      ddl-auto: validate
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    # Long-lived so the PWA keeps working offline. No refresh token yet.
+    ttl: ${JWT_TTL:7d}
