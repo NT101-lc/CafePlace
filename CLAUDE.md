@@ -42,8 +42,9 @@ src/sync/         đồng bộ offline
 src/hooks/        hook dùng chung: useOnlineStatus, useToast
 src/lib/          hàm thuần: format.ts (formatVnd, normalizeSearch bỏ dấu, compareVi…)
 src/components/   component dùng chung (Button, FormField, Sheet, Switch, EmptyState, Icon, ToastProvider, AppLayout, AuthLayout)
-src/components/<tính năng>/   component riêng của một tính năng, ví dụ components/menu/MenuItemSheet.tsx
-src/pages/        một file cho mỗi route (+ file .css cùng tên nếu cần)
+src/components/<tính năng>/   component riêng của một tính năng: menu/, orders/ (ProductTile, CartPanel, OrderCard, cart.ts), reports/ (ColumnChart)
+src/pages/        một file cho mỗi route (+ file .css cùng tên nếu cần):
+                  /orders = SellPage (bán hàng), /orders/history = OrderHistoryPage, /menu = MenuPage, /reports = ReportsPage (chỉ OWNER, mục điều hướng bị ẩn với STAFF)
 ```
 
 Quy ước UI (đã chốt với người dùng: CSS thuần, không thư viện UI; thiết kế cho cả điện thoại dọc lẫn tablet ngang):
@@ -75,6 +76,19 @@ Code ở `common/storage` (`ObjectStorage`, `MediaController`) và `menu/MenuIma
 - Thêm loại file mới (ví dụ logo quán): tạo key với tiền tố riêng (`shop-logo/{shopId}/...`), thêm route tương ứng trong `MediaController` với regex tên file chặt chẽ.
 - File thừa (ví dụ upload xong nhưng lưu DB lỗi) chỉ ghi log, không ảnh hưởng chức năng.
 
+## Đơn hàng và báo cáo
+
+- **Cách bán (đã chốt):** gọi món xong là thanh toán luôn tại quầy. Đơn tạo ra ở trạng thái `PAID`, có `payment_method` là `CASH` hoặc `TRANSFER`. Tiền khách đưa và tiền thối chỉ tính trên giao diện, không lưu. `OPEN` (đơn chưa thanh toán, ví dụ ghi sổ theo bàn) chưa dùng.
+- **Giá lấy từ thiết bị:** dòng đơn lưu bản chụp tên và giá lúc bán, vì đơn offline có thể đến server sau khi menu đã đổi giá. Server chỉ giữ `menuItemId` nếu món đó còn tồn tại **trong quán này**, nếu không thì để null.
+- `createdAt` = giờ trên thiết bị; nếu lệch về tương lai quá 5 phút thì server lấy giờ hiện tại. `receivedAt` = giờ server nhận.
+- **Huỷ đơn:** chỉ chủ quán (`POST /api/orders/{id}/cancel`), huỷ lần hai không lỗi. Đơn huỷ không tính vào doanh thu.
+- **Múi giờ:** "hôm nay", danh sách theo ngày và báo cáo dùng giờ Việt Nam qua `common/ShopTime` (UTC+7). Nếu sau này có quán ở múi giờ khác thì chuyển thành cài đặt riêng của từng quán.
+- **Báo cáo** (`report/ReportService`): chỉ chủ quán. Lấy các đơn `PAID` dạng dòng nhẹ (giờ, tổng tiền, hình thức thanh toán) bằng JPQL rồi gom nhóm bằng Java theo ngày/giờ/hình thức thanh toán. Món bán chạy là truy vấn JPQL `GROUP BY` theo tên món. Tối đa 92 ngày một lần xem. Không dùng SQL native, nên vẫn tự lọc theo quán.
+- **Biểu đồ** (`components/reports/ColumnChart`): HTML/CSS thuần, một màu thương hiệu, không cần chú giải.
+  - Cột rộng tối đa 24px, bo góc 4px ở đầu cột; trục ghi số tròn (1/2/5×10ⁿ); chỉ ghi số trên cột cao nhất.
+  - Rê chuột hoặc focus vào cột thì hiện tooltip; có `<details>` để xem bảng số liệu.
+  - Tỷ lệ thanh toán và món bán chạy dùng thanh ngang cùng màu; phân biệt bằng nhãn chữ, không bằng màu.
+
 ## Multi-tenant: cách lọc theo shop_id
 
 Dùng tính năng `@TenantId` có sẵn của Hibernate (code ở `backend/src/main/java/com/cms/common/tenant/`):
@@ -102,10 +116,13 @@ Ngoại lệ có chủ đích:
 
 ## Đồng bộ offline (frontend)
 
-- Menu: `src/api/menu.ts` hiện bản lưu trong Dexie trước, rồi tải lại từ server khi có mạng; mỗi lần ghi thành công cũng cập nhật Dexie. Khi đăng xuất thì xóa bản sao menu (máy có thể được quán khác dùng). Sửa menu cần có mạng.
+- Menu: hook `useMenu()` (`src/hooks/useMenu.ts`, dùng cho trang Menu và Bán hàng) hiện bản lưu trong Dexie trước, rồi tải lại từ server khi có mạng; mỗi lần ghi thành công cũng cập nhật Dexie. Khi đăng xuất thì xóa bản sao menu (máy có thể được quán khác dùng). Sửa menu cần có mạng.
 - `src/db/db.ts`: Dexie, bảng `menu_items` và `menu_categories` (bản sao menu, từ version 2) và `pending_orders` (đơn tạo trên máy, chưa được server xác nhận). Muốn đổi schema thì thêm `db.version(n)` mới, không sửa version cũ.
 - Mỗi đơn có `clientId` (UUID do máy sinh). Server có `UNIQUE (shop_id, client_id)` nên gửi lại nhiều lần không tạo đơn trùng.
-- `src/sync/sync.ts`: đọc `pending_orders` của quán hiện tại, gửi từng đơn lên `POST /api/orders/sync` (**endpoint chưa viết**), xóa bản local khi server xác nhận. Chạy khi mở app, khi có mạng lại, và mỗi 30 giây. Các phần còn thiếu được đánh dấu `TODO`.
+- **Đơn hàng luôn đi một đường, có mạng hay không:** `createOrder()` (`src/api/orders.ts`) ghi đơn vào `pending_orders` trước, rồi gọi đồng bộ ngay. Đơn không bao giờ mất, kể cả khi mạng chập chờn giữa chừng.
+- `src/sync/sync.ts`: gửi lần lượt các đơn trong `pending_orders` của quán hiện tại lên `POST /api/orders/sync`, đơn cũ trước. Server trả 201 (đơn mới) hoặc 200 (đã có `clientId` này) thì xóa bản local. Mất mạng hoặc lỗi 5xx thì dừng, thử lại khi có mạng hoặc sau 30 giây. Lỗi 4xx thì giữ đơn kèm `lastError` để hiện cho người dùng (**TODO:** cho chủ quán sửa hoặc bỏ đơn bị từ chối). Mỗi lần thay đổi phát event `pending-orders-changed`; dùng hook `usePendingOrders()` để hiện badge "N chờ đồng bộ".
+- `clientId` sinh bằng `randomUuid()` (`src/lib/uuid.ts`), không gọi thẳng `crypto.randomUUID()`: hàm đó không có khi mở app qua `http://<IP LAN>` trên điện thoại.
+- Giỏ hàng đang bán lưu trong `sessionStorage` theo quán (`components/orders/cart.ts`), nên chuyển tab không mất.
 - Service worker (Workbox) cache **giao diện** và **ảnh món** (`/api/media/`); dữ liệu offline nằm trong IndexedDB. Ở `npm run dev` service worker bị tắt; muốn thử PWA thì dùng `npm run build && npm run preview`.
 
 ## Lệnh
@@ -184,4 +201,10 @@ Chạy khi push lên `main`, khi có pull request, và chạy tay được (work
 - `GET /api/menu-categories`: nhóm theo thứ tự hiển thị `[{id, name, sortOrder}]` (mọi vai trò)
 - `PUT /api/menu-categories/order` `{ids: [...]}`: chỉ OWNER, phải gửi đủ mọi nhóm
 - `GET /api/media/menu/{shopId}/{uuid}.{webp|jpg|png}` (công khai): ảnh món
+- `POST /api/orders/sync` `{clientId, createdAt, paymentMethod, note?, items: [{menuItemId?, itemName, unitPrice, quantity}]}` (mọi vai trò): 201 nếu là đơn mới, 200 nếu đã có `clientId` này (trả về đơn cũ)
+- `GET /api/orders?date=yyyy-MM-dd` (mọi vai trò, mặc định hôm nay theo giờ VN): đơn trong ngày kèm các dòng, mới nhất trước
+- `POST /api/orders/{id}/cancel`: chỉ OWNER
+- `GET /api/reports/summary?from=&to=` (chỉ OWNER, ngày tính cả hai đầu, tối đa 92 ngày): `{revenue, orderCount, averageOrderValue, cancelledCount, days[], hours[24], paymentMethods[], topItems[10]}`
+- `GET /api/dashboard/overview` (chỉ OWNER): hôm nay (so với cả ngày hôm qua), tháng/quý/năm **tính đến hôm nay** (so với cùng số ngày đầu kỳ trước), và tổng từ trước tới nay `allTime {revenue, orderCount, firstOrderDate}`
+- `GET /api/dashboard/revenue?groupBy=MONTH|QUARTER|YEAR&from=&to=` (chỉ OWNER): doanh thu theo tháng/quý/năm, `from`/`to` được nới ra trọn kỳ, tối đa 60 cột; mặc định 12 tháng / 8 quý / 5 năm gần nhất. Mỗi cột có `previousYearRevenue` (cùng kỳ năm trước; kỳ đang diễn ra chỉ so cùng số ngày). Truy vấn theo ngày là **SQL native** (`DashboardRepository`), tự lọc `shop_id`; có test `DashboardApiTest.otherShopSeesNothing`.
 - Mọi đường dẫn khác cần header `Authorization: Bearer <token>`. JWT chứa `sub` (userId), `shop_id`, `role` (`OWNER`/`STAFF` → authority `ROLE_OWNER`/`ROLE_STAFF`).

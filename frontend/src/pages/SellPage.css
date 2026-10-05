@@ -1,0 +1,84 @@
+.sell-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.sell-cart {
+  display: none;
+}
+
+/* Phone: floating bar above the bottom tab bar. */
+.cart-bar {
+  position: fixed;
+  z-index: 15;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: calc(var(--tabbar-height) + var(--space-3) + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.cart-bar-count {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  display: grid;
+  place-items: center;
+}
+
+.cart-bar-label {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* Leave room so the last row of tiles is not hidden behind the cart bar. */
+.sell-catalog {
+  padding-bottom: 72px;
+}
+
+@media (min-width: 900px) {
+  .sell-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .sell-catalog {
+    padding-bottom: 0;
+  }
+
+  .sell-cart {
+    display: block;
+    position: sticky;
+    top: var(--space-5);
+    max-height: calc(100dvh - 2 * var(--space-5));
+    overflow-y: auto;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cart-bar {
+    display: none;
+  }
+}

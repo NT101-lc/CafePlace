@@ -9,7 +9,8 @@ interface Props {
   imageUrl: string | null
   /** Overrides imageUrl, e.g. a local preview before upload. */
   previewUrl?: string | null
-  size?: 'md' | 'lg'
+  /** md/lg: fixed squares; fill: full width of the parent, square. */
+  size?: 'md' | 'lg' | 'fill'
 }
 
 /** Square menu item picture. Without an image (or if it fails to load) shows a colored tile with an icon. */
@@ -32,7 +33,7 @@ export default function ItemThumb({ name, category, imageUrl, previewUrl, size =
   const tone = toneFor(category ?? name)
   return (
     <span className={`item-thumb item-thumb-${size} item-thumb-fallback tone-${tone}`} aria-hidden="true">
-      <Icon name={iconFor(`${category ?? ''} ${name}`)} size={size === 'lg' ? 36 : 24} />
+      <Icon name={iconFor(`${category ?? ''} ${name}`)} size={size === 'md' ? 24 : 36} />
     </span>
   )
 }

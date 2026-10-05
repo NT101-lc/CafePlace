@@ -52,3 +52,10 @@
   background: #ece3f1;
   color: #6c4b85;
 }
+
+.item-thumb-fill {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+}

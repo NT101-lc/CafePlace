@@ -2,47 +2,62 @@ import { ApiError, apiFetch } from '../api/client'
 import { getSession } from '../api/session'
 import { db, type PendingOrder } from '../db/db'
 
-// Offline sync skeleton: pending_orders (IndexedDB) → server, delete once the server confirms.
+// Offline sync: pending_orders (IndexedDB) → server, delete once the server confirms.
 //
 // Flow:
-//   1. The orders page saves a new order to db.pending_orders (TODO: not written yet).
-//   2. syncPendingOrders() sends them one by one, oldest first.
-//   3. Server confirms → delete the local copy. Re-sending is safe: the server ignores a clientId it already has.
+//   1. Checkout saves the new order to db.pending_orders (api/orders.ts → createOrder), online or not.
+//   2. syncPendingOrders() sends them one by one, oldest first, to POST /api/orders/sync.
+//   3. Server answers 201 (created) or 200 (already had this clientId) → delete the local copy.
+//      Re-sending is always safe: the server ignores a clientId it already has.
+//   4. No network / server error (5xx) → stop, retry on the next 'online' event or after 30 s.
+//      Rejected by the server (4xx, e.g. invalid data) → keep it with lastError so the user sees it.
 
 const SYNC_INTERVAL_MS = 30_000
 
+/** Fired on window whenever pending_orders changes, so badges and lists can refresh. */
+export const PENDING_ORDERS_CHANGED = 'pending-orders-changed'
+
+export function notifyPendingOrdersChanged(): void {
+  window.dispatchEvent(new Event(PENDING_ORDERS_CHANGED))
+}
+
 let running = false
+let runAgain = false
 
 export async function syncPendingOrders(): Promise<void> {
-  if (running || !navigator.onLine) return
+  if (running) {
+    // An order was added while syncing: go through the list once more when done.
+    runAgain = true
+    return
+  }
+  if (!navigator.onLine) return
   const session = getSession()
   if (!session) return
 
   running = true
   try {
-    const pending = await db.pending_orders.where('shopId').equals(session.user.shopId).sortBy('createdAt')
-
-    for (const order of pending) {
-      try {
-        // TODO: backend endpoint does not exist yet. It must:
-        //   - accept { clientId, createdAt, note, items[] },
-        //   - insert the order, or return the existing one if (shop_id, client_id) already exists,
-        //   - respond 200/201 in both cases so the client can delete its copy.
-        await apiFetch('/api/orders/sync', { method: 'POST', body: toPayload(order) })
-        await db.pending_orders.delete(order.clientId)
-      } catch (err) {
-        if (err instanceof ApiError && err.isNetworkError) {
-          // Lost connection mid-way: stop and retry on the next 'online' event / interval.
-          break
+    do {
+      runAgain = false
+      const pending = await db.pending_orders.where('shopId').equals(session.user.shopId).sortBy('createdAt')
+      for (const order of pending) {
+        try {
+          await apiFetch('/api/orders/sync', { method: 'POST', body: toPayload(order) })
+          await db.pending_orders.delete(order.clientId)
+          notifyPendingOrdersChanged()
+        } catch (err) {
+          if (err instanceof ApiError && (err.isNetworkError || err.status >= 500)) {
+            // Temporary problem: stop and retry later.
+            return
+          }
+          // TODO: let the owner fix or discard orders the server rejects. For now keep them visible.
+          await db.pending_orders.update(order.clientId, {
+            attempts: order.attempts + 1,
+            lastError: err instanceof Error ? err.message : String(err),
+          })
+          notifyPendingOrdersChanged()
         }
-        // TODO: decide how to handle orders the server rejects (e.g. validation error):
-        //   show them to the user to fix or discard. For now keep them and record the error.
-        await db.pending_orders.update(order.clientId, {
-          attempts: order.attempts + 1,
-          lastError: err instanceof Error ? err.message : String(err),
-        })
       }
-    }
+    } while (runAgain)
   } finally {
     running = false
   }
@@ -53,13 +68,13 @@ export function startAutoSync(): void {
   window.addEventListener('online', () => void syncPendingOrders())
   window.setInterval(() => void syncPendingOrders(), SYNC_INTERVAL_MS)
   void syncPendingOrders()
-  // TODO: also refresh db.menu_items from the server when online.
 }
 
 function toPayload(order: PendingOrder) {
   return {
     clientId: order.clientId,
     createdAt: order.createdAt,
+    paymentMethod: order.paymentMethod,
     note: order.note,
     items: order.items,
   }

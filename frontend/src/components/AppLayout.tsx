@@ -1,13 +1,15 @@
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { clearSession, getSession } from '../api/session.ts'
 import { useOnlineStatus } from '../hooks/useOnlineStatus.ts'
+import { usePendingOrders } from '../hooks/usePendingOrders.ts'
 import Button from './Button.tsx'
 import Icon, { type IconName } from './Icon.tsx'
 
-const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
+const NAV_ITEMS: { to: string; label: string; icon: IconName; ownerOnly?: boolean }[] = [
   { to: '/orders', label: 'Đơn hàng', icon: 'receipt' },
   { to: '/menu', label: 'Menu', icon: 'menu' },
-  { to: '/reports', label: 'Báo cáo', icon: 'chart' },
+  { to: '/dashboard', label: 'Tổng quan', icon: 'dashboard', ownerOnly: true },
+  { to: '/reports', label: 'Báo cáo', icon: 'chart', ownerOnly: true },
 ]
 
 const ROLE_LABELS = { OWNER: 'Chủ quán', STAFF: 'Nhân viên' } as const
@@ -20,6 +22,8 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const online = useOnlineStatus()
   const user = getSession()?.user
+  const pendingCount = usePendingOrders().length
+  const navItems = NAV_ITEMS.filter((item) => !item.ownerOnly || user?.role === 'OWNER')
 
   function logout() {
     clearSession()
@@ -41,8 +45,15 @@ export default function AppLayout() {
   )
 
   const status = (
-    <span className={online ? 'status-pill status-online' : 'status-pill status-offline'}>
-      {online ? 'Trực tuyến' : 'Mất mạng'}
+    <span className="status-group">
+      <span className={online ? 'status-pill status-online' : 'status-pill status-offline'}>
+        {online ? 'Trực tuyến' : 'Mất mạng'}
+      </span>
+      {pendingCount > 0 && (
+        <span className="status-pill status-pending" title="Đơn đã lưu trên máy, chưa gửi lên máy chủ">
+          {pendingCount} chờ đồng bộ
+        </span>
+      )}
     </span>
   )
 
@@ -51,7 +62,7 @@ export default function AppLayout() {
       <aside className="app-sidebar">
         {brand}
         <nav className="sidebar-nav" aria-label="Điều hướng chính">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink key={item.to} to={item.to}>
               <Icon name={item.icon} />
               {item.label}
@@ -79,7 +90,7 @@ export default function AppLayout() {
       </main>
 
       <nav className="app-nav" aria-label="Điều hướng chính">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavLink key={item.to} to={item.to}>
             <Icon name={item.icon} size={22} />
             {item.label}

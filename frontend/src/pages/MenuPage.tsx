@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   fetchCategories,
-  fetchMenu,
-  getCachedMenu,
   setMenuItemAvailable,
   sortMenu,
-  type Menu,
   type MenuCategory,
   type MenuItem,
 } from '../api/menu.ts'
@@ -17,6 +14,7 @@ import CategoryOrderSheet from '../components/menu/CategoryOrderSheet.tsx'
 import ItemThumb from '../components/menu/ItemThumb.tsx'
 import MenuItemSheet from '../components/menu/MenuItemSheet.tsx'
 import Switch from '../components/Switch.tsx'
+import { useMenu } from '../hooks/useMenu.ts'
 import { useOnlineStatus } from '../hooks/useOnlineStatus.ts'
 import { useToast } from '../hooks/useToast.ts'
 import { formatVnd, normalizeSearch } from '../lib/format.ts'
@@ -36,42 +34,12 @@ export default function MenuPage() {
   const toast = useToast()
   const isOwner = getSession()?.user.role === 'OWNER'
 
-  /** null while loading for the first time. */
-  const [menu, setMenu] = useState<Menu | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [reloadKey, setReloadKey] = useState(0)
+  const { menu, setMenu, loadError, reload } = useMenu()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   /** Item being edited, 'new' for the add form, null when the sheet is closed. */
   const [editing, setEditing] = useState<MenuItem | 'new' | null>(null)
   const [reordering, setReordering] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      const cached = await getCachedMenu()
-      if (cancelled) return
-      if (cached.items.length > 0) setMenu(cached)
-      if (!navigator.onLine) {
-        if (cached.items.length === 0) setMenu(cached)
-        return
-      }
-      try {
-        const fresh = await fetchMenu()
-        if (cancelled) return
-        setMenu(fresh)
-        setLoadError(null)
-      } catch (err) {
-        if (cancelled) return
-        setLoadError(err instanceof Error ? err.message : 'Không tải được menu')
-        if (cached.items.length === 0) setMenu(cached)
-      }
-    }
-    void load()
-    return () => {
-      cancelled = true
-    }
-  }, [online, reloadKey])
 
   const items = useMemo(() => menu?.items ?? [], [menu])
   const categories = useMemo(() => menu?.categories ?? [], [menu])
@@ -190,7 +158,7 @@ export default function MenuPage() {
         <div className="notice notice-danger" role="alert">
           <Icon name="alert" />
           <span className="spacer">Không tải được menu mới nhất: {loadError}</span>
-          <button type="button" className="notice-action" onClick={() => setReloadKey((k) => k + 1)}>
+          <button type="button" className="notice-action" onClick={() => reload()}>
             Thử lại
           </button>
         </div>
@@ -205,7 +173,7 @@ export default function MenuPage() {
             title="Không tải được menu"
             description={loadError}
             action={
-              <Button icon="refresh" onClick={() => setReloadKey((k) => k + 1)}>
+              <Button icon="refresh" onClick={() => reload()}>
                 Thử lại
               </Button>
             }

@@ -1,0 +1,50 @@
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-tile-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.stat-tile-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.stat-tile-orders {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.stat-tile-compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Two tiles per row on phones: "293.320.000đ" must still fit on one line. */
+@media (max-width: 639px) {
+  .stat-tile {
+    padding: var(--space-3);
+  }
+
+  .stat-tile-value {
+    font-size: var(--text-lg);
+  }
+}

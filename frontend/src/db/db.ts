@@ -33,6 +33,8 @@ export interface PendingOrderItem {
   quantity: number
 }
 
+export type PaymentMethod = 'CASH' | 'TRANSFER'
+
 /** An order created on this device that the server has not confirmed yet. */
 export interface PendingOrder {
   /** UUID made on the device (crypto.randomUUID()); the server uses it to ignore duplicates. */
@@ -41,6 +43,9 @@ export interface PendingOrder {
   shopId: number
   /** ISO timestamp of creation on the device. */
   createdAt: string
+  paymentMethod: PaymentMethod
+  /** VND, sum of the lines (the server recomputes it). */
+  totalAmount: number
   note?: string
   items: PendingOrderItem[]
   /** Number of failed sync attempts, and the last error message from the server. */

@@ -15,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -34,6 +35,10 @@ public class Order extends TenantScopedEntity {
 	@Column(nullable = false, length = 20)
 	private OrderStatus status = OrderStatus.OPEN;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
+	private PaymentMethod paymentMethod = PaymentMethod.CASH;
+
 	/** Total in VND. */
 	@Column(nullable = false)
 	private long totalAmount;
@@ -52,7 +57,10 @@ public class Order extends TenantScopedEntity {
 	@Column(nullable = false, updatable = false)
 	private Instant receivedAt;
 
+	private Instant cancelledAt;
+
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("id")
 	private List<OrderItem> items = new ArrayList<>();
 
 	protected Order() {
@@ -71,6 +79,16 @@ public class Order extends TenantScopedEntity {
 		totalAmount += item.getLineTotal();
 	}
 
+	public void markPaid(PaymentMethod method) {
+		this.paymentMethod = method;
+		this.status = OrderStatus.PAID;
+	}
+
+	public void cancel(Instant at) {
+		this.status = OrderStatus.CANCELLED;
+		this.cancelledAt = at;
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -83,8 +101,8 @@ public class Order extends TenantScopedEntity {
 		return status;
 	}
 
-	public void setStatus(OrderStatus status) {
-		this.status = status;
+	public PaymentMethod getPaymentMethod() {
+		return paymentMethod;
 	}
 
 	public long getTotalAmount() {
@@ -109,6 +127,10 @@ public class Order extends TenantScopedEntity {
 
 	public Instant getReceivedAt() {
 		return receivedAt;
+	}
+
+	public Instant getCancelledAt() {
+		return cancelledAt;
 	}
 
 	public List<OrderItem> getItems() {
