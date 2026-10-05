@@ -1,9 +1,17 @@
-// Placeholder: the reports feature is not built yet.
+import EmptyState from '../components/EmptyState.tsx'
+
+// Placeholder: revenue and best-selling items come after the sales screen.
 export default function ReportsPage() {
   return (
     <section>
-      <h1>Báo cáo</h1>
-      <p className="muted">Tính năng đang được phát triển.</p>
+      <div className="page-header">
+        <h1>Báo cáo</h1>
+      </div>
+      <EmptyState
+        icon="chart"
+        title="Báo cáo đang được xây dựng"
+        description="Sắp tới: doanh thu theo ngày, số đơn và các món bán chạy."
+      />
     </section>
   )
 }

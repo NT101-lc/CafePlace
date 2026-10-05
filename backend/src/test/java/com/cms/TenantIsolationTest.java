@@ -74,7 +74,7 @@ class TenantIsolationTest {
 
 	@Test
 	void shopBCannotReadShopAMenuItems() {
-		Long itemId = asShop(tokenA, () -> menuItemRepository.save(new MenuItem("Cà phê sữa đá", "Cà phê", 25_000)))
+		Long itemId = asShop(tokenA, () -> menuItemRepository.save(new MenuItem("Cà phê sữa đá", null, 25_000)))
 			.getId();
 
 		// Shop A sees its own item.

@@ -3,6 +3,8 @@ import { Link, Navigate, useNavigate } from 'react-router'
 import { login } from '../api/auth.ts'
 import { ApiError } from '../api/client.ts'
 import { getSession } from '../api/session.ts'
+import AuthLayout from '../components/AuthLayout.tsx'
+import Button from '../components/Button.tsx'
 import FormField from '../components/FormField.tsx'
 
 export default function LoginPage() {
@@ -28,10 +30,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
-      <form className="card" onSubmit={handleSubmit} noValidate>
+    <AuthLayout>
+      <form onSubmit={handleSubmit} noValidate>
         <h1>Đăng nhập</h1>
-        {error && !error.fields && <div className="alert">{error.message}</div>}
+        {error && !error.fields && <div className="notice notice-danger" role="alert">{error.message}</div>}
         <FormField
           label="Tên đăng nhập"
           name="username"
@@ -50,13 +52,13 @@ export default function LoginPage() {
           error={error?.fields?.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
-        <button type="submit" className="btn-primary" disabled={submitting}>
+        <Button type="submit" variant="primary" size="lg" loading={submitting}>
           {submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-        </button>
+        </Button>
         <p className="auth-switch">
           Chưa có tài khoản? <Link to="/register">Đăng ký quán mới</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   )
 }

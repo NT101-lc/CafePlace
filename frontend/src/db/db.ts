@@ -6,12 +6,23 @@ import Dexie, { type EntityTable } from 'dexie'
 export interface LocalMenuItem {
   id: number
   name: string
+  /** null = no category ("Khác"). */
+  categoryId: number | null
   category: string | null
   /** VND. */
   price: number
   available: boolean
+  /** Relative URL like /api/media/menu/12/<uuid>.webp, or null. Cached by the service worker. */
+  imageUrl: string | null
   /** ISO timestamp from the server. */
   updatedAt: string
+}
+
+/** Copy of a server menu category; sortOrder 0 is shown first. */
+export interface LocalMenuCategory {
+  id: number
+  name: string
+  sortOrder: number
 }
 
 export interface PendingOrderItem {
@@ -39,12 +50,22 @@ export interface PendingOrder {
 
 export const db = new Dexie('cms') as Dexie & {
   menu_items: EntityTable<LocalMenuItem, 'id'>
+  menu_categories: EntityTable<LocalMenuCategory, 'id'>
   pending_orders: EntityTable<PendingOrder, 'clientId'>
 }
 
 // Only primary keys and fields used in queries are listed; other fields are stored anyway.
-// To change the schema later, add db.version(2).stores({...}) — never edit version 1.
+// To change the schema, add a new db.version(n) — never edit an existing version.
 db.version(1).stores({
   menu_items: 'id, category',
   pending_orders: 'clientId, shopId, createdAt',
 })
+
+// v2: categories have their own table (with display order); menu items reference them by id.
+db.version(2)
+  .stores({
+    menu_items: 'id, categoryId',
+    menu_categories: 'id',
+  })
+  // The old cached menu has the wrong shape; it is refetched on the next online load.
+  .upgrade((tx) => tx.table('menu_items').clear())

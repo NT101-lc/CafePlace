@@ -31,7 +31,9 @@ interface RequestOptions {
 export async function apiFetch<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
   const session = getSession()
   const headers: Record<string, string> = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // A Blob (e.g. an image) is sent as-is with its own type; anything else as JSON.
+  const isFile = body instanceof Blob
+  if (body !== undefined) headers['Content-Type'] = isFile ? body.type : 'application/json'
   if (session) headers.Authorization = `Bearer ${session.token}`
 
   let response: Response
@@ -39,7 +41,7 @@ export async function apiFetch<T>(path: string, { method = 'GET', body }: Reques
     response = await fetch(path, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFile ? body : JSON.stringify(body),
     })
   } catch {
     throw new ApiError(0, 'NETWORK_ERROR', 'Không kết nối được máy chủ. Vui lòng kiểm tra mạng.')

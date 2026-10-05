@@ -1,5 +1,7 @@
 // Login session stored in localStorage so the app still knows the user when reopened offline.
 
+import { db } from '../db/db.ts'
+
 export type Role = 'OWNER' | 'STAFF'
 
 export interface UserInfo {
@@ -43,4 +45,7 @@ export function saveSession(session: Session): void {
 export function clearSession(): void {
   // TODO: when logging out, decide what happens to unsynced pending_orders (warn the user?).
   localStorage.removeItem(STORAGE_KEY)
+  // The cached menu belongs to this shop; another shop may log in on the same device next.
+  void db.menu_items.clear()
+  void db.menu_categories.clear()
 }

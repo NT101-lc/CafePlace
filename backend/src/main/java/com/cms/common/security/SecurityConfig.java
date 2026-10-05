@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * the {@code shop_id} claim is read by {@link com.cms.common.tenant.TenantContext}.
  */
 @Configuration
+@EnableMethodSecurity // enables @PreAuthorize("hasRole('OWNER')") on controller methods
 public class SecurityConfig {
 
 	public static final String CLAIM_ROLE = "role";
@@ -42,6 +44,8 @@ public class SecurityConfig {
 			.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+				// Images are loaded by <img> tags, which cannot send the JWT (see MediaController).
+				.requestMatchers(HttpMethod.GET, "/api/media/**").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
 				.anyRequest().authenticated())
 			.oauth2ResourceServer(oauth -> oauth

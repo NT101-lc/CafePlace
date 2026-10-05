@@ -3,6 +3,8 @@ import { Link, Navigate, useNavigate } from 'react-router'
 import { register, type RegisterInput } from '../api/auth.ts'
 import { ApiError } from '../api/client.ts'
 import { getSession } from '../api/session.ts'
+import AuthLayout from '../components/AuthLayout.tsx'
+import Button from '../components/Button.tsx'
 import FormField from '../components/FormField.tsx'
 
 const EMPTY_FORM: RegisterInput = { shopName: '', fullName: '', username: '', password: '' }
@@ -34,10 +36,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
-      <form className="card" onSubmit={handleSubmit} noValidate>
+    <AuthLayout>
+      <form onSubmit={handleSubmit} noValidate>
         <h1>Đăng ký quán mới</h1>
-        {error && !error.fields && <div className="alert">{error.message}</div>}
+        {error && !error.fields && <div className="notice notice-danger" role="alert">{error.message}</div>}
         <FormField
           label="Tên quán"
           name="shopName"
@@ -71,13 +73,13 @@ export default function RegisterPage() {
           error={error?.fields?.password}
           onChange={(e) => update('password', e.target.value)}
         />
-        <button type="submit" className="btn-primary" disabled={submitting}>
+        <Button type="submit" variant="primary" size="lg" loading={submitting}>
           {submitting ? 'Đang tạo quán...' : 'Đăng ký'}
-        </button>
+        </Button>
         <p className="auth-switch">
           Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   )
 }

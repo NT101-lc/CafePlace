@@ -12,7 +12,7 @@ SaaS quản lý quán cà phê nhỏ: nhiều quán dùng chung một hệ thố
 backend/    Spring Boot 4 (Java 21), package theo tính năng: auth, shop, menu, order, common
 frontend/   React + Vite + TypeScript: pages, components, api, db (Dexie), sync
 deploy/     docker-compose production, Caddyfile, backup.sh
-docker-compose.dev.yml   PostgreSQL cho dev/test
+docker-compose.dev.yml   PostgreSQL + RustFS (lưu ảnh món) cho dev/test
 CLAUDE.md   bối cảnh, quy ước code, cách hoạt động multi-tenant — nên đọc trước
 ```
 
@@ -21,7 +21,7 @@ CLAUDE.md   bối cảnh, quy ước code, cách hoạt động multi-tenant —
 Cần cài: **JDK 21**, **Node.js 24 LTS**, **Docker Desktop**. Không cần cài Maven (đã có Maven Wrapper).
 
 ```bash
-# 1. Database (một lần, chạy nền)
+# 1. PostgreSQL + RustFS (một lần, chạy nền). Console RustFS: http://localhost:9101/rustfs/console/
 docker compose -f docker-compose.dev.yml up -d
 
 # 2. Backend → http://localhost:8080/api/health
@@ -39,7 +39,7 @@ Mở http://localhost:5173 → "Đăng ký quán mới".
 ## Kiểm tra
 
 ```bash
-cd backend && ./mvnw verify          # build + test (cần database dev đang chạy)
+cd backend && ./mvnw verify          # build + test (cần Postgres + RustFS dev đang chạy)
 cd frontend && npm run lint && npm run build
 ```
 
@@ -55,4 +55,4 @@ cd deploy
 docker compose up -d --build
 ```
 
-Caddy tự lấy chứng chỉ HTTPS. Sao lưu: `deploy/backup.sh` (đặt cron hằng ngày; nhớ chép file backup ra khỏi server).
+Caddy tự lấy chứng chỉ HTTPS. Sao lưu: `deploy/backup.sh` lưu cả database lẫn ảnh món (đặt cron hằng ngày; nhớ chép file backup ra khỏi server).

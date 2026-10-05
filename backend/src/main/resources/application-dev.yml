@@ -9,6 +9,11 @@ app:
   jwt:
     # Dev-only secret. Never reuse it in production.
     secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+  storage:
+    # Matches the rustfs service in docker-compose.dev.yml.
+    endpoint: ${S3_ENDPOINT:http://localhost:9100}
+    access-key: ${S3_ACCESS_KEY:cms-dev}
+    secret-key: ${S3_SECRET_KEY:cms-dev-secret}
 
 logging:
   level:

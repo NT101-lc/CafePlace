@@ -1,0 +1,37 @@
+.image-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.image-picker-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.image-picker-label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.image-picker-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.image-picker .field-error,
+.image-picker .field-hint {
+  font-size: var(--text-sm);
+}
+
+.image-picker .field-error {
+  color: var(--color-danger);
+}
+
+.image-picker .field-hint {
+  color: var(--color-text-muted);
+}

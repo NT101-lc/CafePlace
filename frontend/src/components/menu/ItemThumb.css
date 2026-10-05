@@ -1,0 +1,54 @@
+.item-thumb {
+  flex-shrink: 0;
+  display: block;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--color-surface-muted);
+}
+
+.item-thumb-md {
+  width: 56px;
+  height: 56px;
+}
+
+.item-thumb-lg {
+  width: 112px;
+  height: 112px;
+  border-radius: var(--radius-md);
+}
+
+.item-thumb-fallback {
+  display: grid;
+  place-items: center;
+}
+
+/* Warm, low-contrast tiles; one per category (see toneFor). */
+.tone-0 {
+  background: #f3e3d3;
+  color: #8a5a35;
+}
+
+.tone-1 {
+  background: #e6efdc;
+  color: #4d6b35;
+}
+
+.tone-2 {
+  background: #fbe6e1;
+  color: #a2483a;
+}
+
+.tone-3 {
+  background: #e3ecf3;
+  color: #3f6584;
+}
+
+.tone-4 {
+  background: #f6edcf;
+  color: #8a6a14;
+}
+
+.tone-5 {
+  background: #ece3f1;
+  color: #6c4b85;
+}

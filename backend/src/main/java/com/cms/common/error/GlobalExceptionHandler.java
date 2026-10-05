@@ -15,6 +15,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -46,6 +47,13 @@ public class GlobalExceptionHandler {
 	ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex) {
 		return ResponseEntity.badRequest()
 			.body(new ApiError("BAD_REQUEST", "Dữ liệu gửi lên không đúng định dạng"));
+	}
+
+	/** E.g. /api/menu-items/abc where a number is expected. */
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		return ResponseEntity.badRequest()
+			.body(new ApiError("BAD_REQUEST", "Tham số không hợp lệ: " + ex.getName()));
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)

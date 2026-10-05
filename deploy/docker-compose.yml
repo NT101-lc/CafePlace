@@ -1,4 +1,4 @@
-# Production stack: PostgreSQL + Spring Boot API + Caddy (HTTPS, frontend, reverse proxy).
+# Production stack: PostgreSQL + RustFS (image storage) + Spring Boot API + Caddy (HTTPS, frontend, reverse proxy).
 # Setup:  cp ../.env.example .env   (then fill in real values)
 # Start:  docker compose up -d --build
 # Logs:   docker compose logs -f app
@@ -21,6 +21,23 @@ services:
       retries: 10
     # No "ports": the database is reachable only from the other containers.
 
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    restart: unless-stopped
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in deploy/.env}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in deploy/.env}
+    volumes:
+      - rustfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No "ports": only the backend talks to RustFS; browsers get images through /api/media.
+
   app:
     build: ../backend
     restart: unless-stopped
@@ -31,8 +48,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
       JWT_TTL: ${JWT_TTL:-7d}
+      S3_ENDPOINT: http://rustfs:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET:-cms-media}
     depends_on:
       postgres:
+        condition: service_healthy
+      rustfs:
         condition: service_healthy
 
   caddy:
@@ -54,5 +77,6 @@ services:
 
 volumes:
   pgdata:
+  rustfs-data:
   caddy_data:
   caddy_config:

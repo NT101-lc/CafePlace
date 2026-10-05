@@ -1,4 +1,6 @@
-# Development only: PostgreSQL for the backend (database "cms") and its tests (database "cms_test").
+# Development only:
+#   - PostgreSQL for the backend (database "cms") and its tests (database "cms_test")
+#   - RustFS (S3-compatible object storage) for menu item images (buckets "cms-media" and "cms-media-test")
 # Start:  docker compose -f docker-compose.dev.yml up -d
 # Stop:   docker compose -f docker-compose.dev.yml down        (add -v to also delete the data)
 name: cms-dev
@@ -24,6 +26,28 @@ services:
       timeout: 3s
       retries: 10
 
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_ACCESS_KEY: cms-dev
+      RUSTFS_SECRET_KEY: cms-dev-secret
+      # Web console: http://localhost:9101/rustfs/console/  (login with the keys above)
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      # Host ports 9100/9101 because 9000/9001 are often taken by MinIO.
+      - "9100:9000"
+      - "9101:9001"
+    volumes:
+      - rustfs-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 configs:
   create-test-db:
     content: |
@@ -31,3 +55,4 @@ configs:
 
 volumes:
   pgdata:
+  rustfs-data:

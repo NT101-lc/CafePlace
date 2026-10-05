@@ -32,6 +32,18 @@ export default defineConfig({
         navigateFallback: '/index.html',
         // ...but never API calls.
         navigateFallbackDenylist: [/^\/api\//],
+        // Menu images: each upload gets a new URL, so a cached copy never goes stale (works offline too).
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/media/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'menu-images',
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],
