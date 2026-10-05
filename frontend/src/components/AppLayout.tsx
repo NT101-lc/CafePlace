@@ -1,8 +1,7 @@
-import { NavLink, Outlet, useNavigate } from 'react-router'
-import { clearSession, getSession } from '../api/session.ts'
+import { NavLink, Outlet } from 'react-router'
+import { getSession } from '../api/session.ts'
 import { useOnlineStatus } from '../hooks/useOnlineStatus.ts'
 import { usePendingOrders } from '../hooks/usePendingOrders.ts'
-import Button from './Button.tsx'
 import Icon, { type IconName } from './Icon.tsx'
 
 const NAV_ITEMS: { to: string; label: string; icon: IconName; ownerOnly?: boolean }[] = [
@@ -19,16 +18,10 @@ const ROLE_LABELS = { OWNER: 'Chủ quán', STAFF: 'Nhân viên' } as const
  * Phones: top bar + bottom tab bar. Screens >= 900px: left sidebar (see index.css).
  */
 export default function AppLayout() {
-  const navigate = useNavigate()
   const online = useOnlineStatus()
   const user = getSession()?.user
   const pendingCount = usePendingOrders().length
   const navItems = NAV_ITEMS.filter((item) => !item.ownerOnly || user?.role === 'OWNER')
-
-  function logout() {
-    clearSession()
-    navigate('/login', { replace: true })
-  }
 
   const brand = (
     <div className="brand">
@@ -71,9 +64,6 @@ export default function AppLayout() {
         </nav>
         <div className="sidebar-footer">
           {status}
-          <Button variant="ghost" icon="logout" onClick={logout}>
-            Đăng xuất
-          </Button>
         </div>
       </aside>
 
@@ -81,11 +71,17 @@ export default function AppLayout() {
         {brand}
         <div className="topbar-actions">
           {status}
-          <Button variant="ghost" icon="logout" className="btn-icon" aria-label="Đăng xuất" onClick={logout} />
         </div>
       </header>
 
       <main className="app-main">
+        {/* DEMO BRANCH */}
+        <div className="notice notice-warning demo-banner" role="note">
+          <Icon name="alert" />
+          <span>
+            <strong>Bản demo</strong> – mọi người dùng chung một quán thử nghiệm, dữ liệu có thể bị xoá bất cứ lúc nào.
+          </span>
+        </div>
         <Outlet />
       </main>
 

@@ -69,6 +69,17 @@ public class AuthService {
 		}));
 	}
 
+	/** Logs in an existing active user WITHOUT a password. Only for the demo mode (see com.cms.demo). */
+	public AuthResponse loginWithoutPassword(String username) {
+		return TenantContext.callAsSystem(() -> tx.execute(status -> {
+			User user = userRepository.findByUsername(normalize(username))
+				.filter(User::isActive)
+				.orElseThrow(() -> AppException.notFound("Không tìm thấy tài khoản demo"));
+			Shop shop = shopRepository.findById(user.getShopId()).orElseThrow();
+			return toResponse(user, shop);
+		}));
+	}
+
 	private AuthResponse toResponse(User user, Shop shop) {
 		var info = new AuthResponse.UserInfo(user.getId(), user.getUsername(), user.getFullName(), user.getRole(),
 				shop.getId(), shop.getName());

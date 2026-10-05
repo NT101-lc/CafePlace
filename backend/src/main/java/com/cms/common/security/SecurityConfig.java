@@ -46,7 +46,7 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.GET, "/api/health").permitAll()
 				// Images are loaded by <img> tags, which cannot send the JWT (see MediaController).
 				.requestMatchers(HttpMethod.GET, "/api/media/**").permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/demo").permitAll()
 				.anyRequest().authenticated())
 			.oauth2ResourceServer(oauth -> oauth
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))

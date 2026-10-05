@@ -2,6 +2,8 @@
 
 Ghi chú cho các phiên làm việc sau (người hoặc AI). Đọc hết trước khi sửa code.
 
+> **NHÁNH DEMO:** nhánh `demo` bỏ đăng nhập để gửi người khác dùng thử. Backend tạo sẵn "Quán Demo" kèm menu mẫu khi khởi động (`com.cms.demo`, bật bằng `app.demo.enabled`/`DEMO_MODE`, mặc định bật trên nhánh này). `POST /api/auth/demo` cấp JWT bình thường cho chủ quán demo, nên bảo mật và việc tách dữ liệu theo quán vẫn giữ nguyên. Frontend tự đăng nhập (`RequireAuth`), bỏ trang đăng nhập/đăng ký và nút đăng xuất, thêm dòng thông báo "Bản demo". **Không merge nhánh này vào `main`.**
+
 ## Bối cảnh
 
 - SaaS quản lý quán cà phê nhỏ ở Việt Nam. Nhiều quán dùng chung **một backend, một database**; dữ liệu mỗi quán tách bằng cột `shop_id` (multi-tenant).

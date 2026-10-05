@@ -36,3 +36,8 @@ function startSession(response: AuthResponse): Session {
   saveSession(session)
   return session
 }
+
+/** DEMO BRANCH: enter the shared demo shop without a password. */
+export async function demoLogin(): Promise<Session> {
+  return startSession(await apiFetch<AuthResponse>('/api/auth/demo', { method: 'POST' }))
+}
